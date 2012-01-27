@@ -1,0 +1,42 @@
+#!/usr/bin/env perl
+# Copyright 2012 Kevin Spencer <kevin@kevinspencer.org>
+#
+# Permission to use, copy, modify, distribute, and sell this software and its
+# documentation for any purpose is hereby granted without fee, provided that
+# the above copyright notice appear in all copies and that both that
+# copyright notice and this permission notice appear in supporting
+# documentation. No representations are made about the suitability of this
+# software for any purpose. It is provided "as is" without express or
+# implied warranty.
+#
+################################################################################
+
+use File::Basename;
+use XML::Simple;
+use WWW::Mechanize;
+use strict;
+use warnings;
+
+my $album      = shift;
+my $api_url    = 'http://www.zenfolio.com/api/1.6/zfapi.asmx';
+my $api_method = 'LoadPhotoSetPhotos';
+
+my $req_url = $api_url . '/' . $api_method . '?photoSetId=' . $album . '&startingIndex=0&numberOfPhotos=1000';
+
+if (! -d $album) { mkdir($album) };
+
+my $mech = WWW::Mechanize->new();
+$mech->get($req_url);
+if ($mech->success()) {
+    my $xs = XML::Simple->new();
+    my $data = $xs->XMLin($mech->content());
+    for my $photo (@{$data->{Photo}}) {
+        my $downloaded_file = $album . '/' . basename($photo->{OriginalUrl});
+        if (-e $downloaded_file) {
+            print "Already downloaded $photo->{OriginalUrl}, skipping.\n";
+            next;
+        }
+        print "Fetching $photo->{OriginalUrl} to $downloaded_file\n";
+        $mech->get($photo->{OriginalUrl}, ':content_file' => $downloaded_file)
+    }
+}
