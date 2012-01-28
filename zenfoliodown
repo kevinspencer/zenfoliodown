@@ -49,7 +49,16 @@ if ($response->is_success()) {
             print "Already downloaded $photo->{OriginalUrl}, skipping.\n";
             next;
         }
-        $bot->get($photo->{OriginalUrl}, ':content_file' => $downloaded_file)
+        for my $attempt (1..3) {
+            my $response = $bot->get($photo->{OriginalUrl}, ':content_file' => $downloaded_file);
+            last if ($response->is_success() && -e $downloaded_file);
+            if ($attempt == 3) {
+                my $miss_log = $album . '/' . $album . '_miss.log';
+                open(my $fh, '>>', $miss_log) || die "Could not append $miss_log - $!\n";
+                print $fh $photo->{OriginalUrl}, "\n";
+                close($fh);
+            }
+        }
     }
 } else {
     print $response->status_line(), "\n";
