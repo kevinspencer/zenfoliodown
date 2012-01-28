@@ -22,7 +22,7 @@ if (! $album) {
     print "USAGE: $0 <album>\n";
     exit();
 }
-if (! -d $album) { mkdir($album) };
+mkdir($album) || die "Could not create $album - $!\n" if (! -d $album);
 
 my $api_url    = 'http://www.zenfolio.com/api/1.6/zfapi.asmx';
 my $api_method = 'LoadPhotoSetPhotos';
@@ -37,7 +37,7 @@ if ($mech->success()) {
     my $xs = XML::Simple->new();
     my $data = $xs->XMLin($mech->content());
     if (! $data->{Photo}) {
-        die "Response from $req_ural is not valid.\n";
+        die "Response from $req_url is not valid.\n";
     }
     for my $photo (@{$data->{Photo}}) {
         my $downloaded_file = $album . '/' . basename($photo->{OriginalUrl});
