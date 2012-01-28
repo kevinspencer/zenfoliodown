@@ -11,7 +11,7 @@ Copy the zenfolio program to a directory of your choice.
 
 You'll need the following modules installed, all available from the CPAN:
 
-WWW::Mechanize
+LWP::UserAgent
 XML::Simple
 
 Usage
