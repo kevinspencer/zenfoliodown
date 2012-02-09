@@ -1,13 +1,13 @@
 zenfoliodown - download photos from zenfolio
 --------------------------------------------
 
-zenfolio is a Perl program that downloads photos from a zenfolio album
+zenfoliodown is a Perl program that downloads photos from a zenfolio album
 
 
 Installation
 ------------
 
-Copy the zenfolio program to a directory of your choice.
+Copy the zenfoliodown program to a directory of your choice.
 
 You'll need the following modules installed, all available from the CPAN:
 
@@ -17,11 +17,14 @@ XML::Simple
 Usage
 -----
 
-./zenfoliodown album
+./zenfoliodown --site=example.zenfolio.com --album=album
 
-Where 'album' is the numeric portion of the album as describe in a typical
-zenfolio URL: http://example.zenfolio.com/p123456789.  In this case the
-album would be 123456789.
+Where 'site' is the name of the zenfolio site you're downloading the photos from
+and 'album' is the album you wish to download.  
+
+In this example URL, the album is p123456789:
+
+http://example.zenfolio.com/p123456789
 
 Storage
 -------
