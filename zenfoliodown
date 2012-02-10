@@ -12,36 +12,53 @@
 ################################################################################
 
 use File::Basename;
+use Getopt::Long;
 use LWP::UserAgent;
 use XML::Simple;
 use strict;
 use warnings;
 
-our $VERSION = 0.3;
+our $VERSION = 0.4;
 
-my $album = shift;
-if (! $album) {
-    print "USAGE: $0 <album>\n";
+my ($site, $album);
+GetOptions("site=s" => \$site, "album=s" => \$album);
+
+if ((! $album) || (! $site)) {
+    print "USAGE: $0 --site=example.zenfolio.com --album=album\n";
     exit();
 }
 mkdir($album) || die "Could not create $album - $!\n" if (! -d $album);
 
-my $api_url    = 'http://www.zenfolio.com/api/1.6/zfapi.asmx';
-my $api_method = 'LoadPhotoSetPhotos';
-my $req_url    = $api_url . '/' . $api_method . '?photoSetId=' . $album . '&startingIndex=0&numberOfPhotos=1000';
-
 my $bot = LWP::UserAgent->new();
 $bot->agent("zenfoliodown/$VERSION");
-my $response = $bot->get($req_url);
+my $api_url = 'http://www.zenfolio.com/api/1.6/zfapi.asmx';
+
+# remove leading p if album follows usual zenfolio convention of p123456789
+$album =~ s/^p// if ($album =~ /\b^p\d+\b/);
+my $album_id = $album;
+# if album_id still non numeric, call the ResolveReference API method to find integer album id
+if ($album_id =~ /\D/) {
+    $site =~ s/\.zenfolio\.com//;
+    my $url = $api_url . '/' . 'ResolveReference' . "?loginName=$site" . "&reference=$album_id";
+    my $response = $bot->get($url);
+    if ($response->is_success()) {
+        my $xs = XML::Simple->new();
+        my $data = $xs->XMLin($response->content());
+        $album_id = $data->{PhotoSet}{Id};
+    }
+}
+my $url = $api_url . '/' . 'LoadPhotoSetPhotos' . '?photoSetId=' . $album_id . '&startingIndex=0&numberOfPhotos=1000';
+
+my $response = $bot->get($url);
 $bot->show_progress(1);
 if ($response->is_success()) {
     if (! response_is_xml($response->content())) {
-        die "Response from $req_url is not valid.\n";
+        die "Response from $url is not valid.\n";
     }
     my $xs = XML::Simple->new();
     my $data = $xs->XMLin($response->content());
     if (! $data->{Photo}) {
-        die "Response from $req_url is not valid.\n";
+        die "Response from $url is not valid.\n";
     }
     for my $photo (@{$data->{Photo}}) {
         my $downloaded_file = $album . '/' . basename($photo->{OriginalUrl});
