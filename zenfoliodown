@@ -31,7 +31,8 @@ mkdir($album) || die "Could not create $album - $!\n" if (! -d $album);
 
 my $bot = LWP::UserAgent->new();
 $bot->agent("zenfoliodown/$VERSION");
-my $api_url = 'http://www.zenfolio.com/api/1.6/zfapi.asmx';
+# minumum api version changed to 1.7
+my $api_url = 'http://www.zenfolio.com/api/1.7/zfapi.asmx';
 
 # remove leading p if album follows usual zenfolio convention of p123456789
 $album =~ s/^p// if ($album =~ /\b^p\d+\b/);
