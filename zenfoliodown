@@ -27,7 +27,6 @@ if ((! $album) || (! $site)) {
     print "USAGE: $0 --site=example.zenfolio.com --album=album\n";
     exit();
 }
-mkdir($album) || die "Could not create $album - $!\n" if (! -d $album);
 
 my $bot = LWP::UserAgent->new();
 $bot->agent("zenfoliodown/$VERSION");
@@ -36,6 +35,10 @@ my $api_url = 'http://www.zenfolio.com/api/1.7/zfapi.asmx';
 
 # remove leading p if album follows usual zenfolio convention of p123456789
 $album =~ s/^p// if ($album =~ /\b^p\d+\b/);
+
+# mkdir needs to be after leading "p" removal
+mkdir($album) || die "Could not create $album - $!\n" if (! -d $album);
+
 my $album_id = $album;
 # if album_id still non numeric, call the ResolveReference API method to find integer album id
 if ($album_id =~ /\D/) {
